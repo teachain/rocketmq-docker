@@ -1,0 +1,50 @@
+FROM maven:3.6-jdk-8-alpine AS builder
+
+RUN apk add unzip openssl gnupg wget
+
+ARG user=rocketmq
+ARG group=rocketmq
+ARG uid=3000
+ARG gid=3000
+
+# RocketMQ Dashboard runs with user `rocketmq`, uid = 3000
+# If you bind mount a volume from the host or a data container,
+# ensure you use the same uid
+RUN addgroup --gid ${gid} ${group} \
+&& adduser --uid ${uid} -G ${group} ${user} -s /bin/bash -D 
+
+ARG version
+
+ENV ROCKETMQ_DASHBOARD_VERSION ${version}
+ENV ROCKETMQ_DASHBOARD_HOME  /home/rocketmq/rocketmq-dashboard-${ROCKETMQ_DASHBOARD_VERSION}
+WORKDIR ${ROCKETMQ_DASHBOARD_HOME}
+
+#可从这里下载 https://dist.apache.org/repos/dist/release/rocketmq/rocketmq-dashboard/
+
+RUN set -eux; \
+    curl -L https://dist.apache.org/repos/dist/release/rocketmq/rocketmq-dashboard/${ROCKETMQ_DASHBOARD_VERSION}/rocketmq-dashboard-${ROCKETMQ_DASHBOARD_VERSION}-source-release.zip -o rocketmq-dashboard.zip; \
+    curl -L https://dist.apache.org/repos/dist/release/rocketmq/rocketmq-dashboard/${ROCKETMQ_DASHBOARD_VERSION}/rocketmq-dashboard-${ROCKETMQ_DASHBOARD_VERSION}-source-release.zip.asc -o rocketmq-dashboard.zip.asc; \
+    wget https://www.apache.org/dist/rocketmq/KEYS --no-check-certificate; \
+    \
+    gpg --import KEYS; \
+    gpg --batch --verify rocketmq-dashboard.zip.asc rocketmq-dashboard.zip ; \
+    unzip rocketmq-dashboard.zip ; \
+    rm rocketmq-dashboard.zip rocketmq-dashboard.zip.asc KEYS;
+    
+RUN cd rocketmq-dashboard-${ROCKETMQ_DASHBOARD_VERSION} ; \
+    mvn -DskipTests clean install ;\
+    ls -l target ; 
+
+
+RUN mkdir bin; \
+    mv rocketmq-dashboard-${ROCKETMQ_DASHBOARD_VERSION}/target/rocketmq-dashboard-${ROCKETMQ_DASHBOARD_VERSION}.jar bin/ ; \
+    mv bin/rocketmq-dashboard-${ROCKETMQ_DASHBOARD_VERSION}.jar bin/rocketmq-dashboard.jar; \
+    ls -l bin; \
+    rm -rf rocketmq-dashboard-${ROCKETMQ_DASHBOARD_VERSION}
+    
+RUN rm -rf /root/.m2/repository/*
+RUN rm -rf /usr/share/maven
+
+RUN chown -R ${uid}:${gid} ${ROCKETMQ_DASHBOARD_HOME}
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "bin/rocketmq-dashboard.jar"];

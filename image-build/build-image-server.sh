@@ -17,12 +17,12 @@
 
 checkVersion() {
     echo "Version = $1"
-	echo $1 |grep -E "^[0-9]+\.[0-9]+\.[0-9]+" > /dev/null
+    echo $1 |grep -E "^[0-9]+\.[0-9]+\.[0-9]+" > /dev/null
     if [ $? = 0 ]; then
         return 1
     fi
 
-	echo "Version $1 illegal, it should be X.X.X format(e.g. 4.5.0), please check released versions in 'https://archive.apache.org/dist/rocketmq/'"
+    echo "Version $1 illegal, it should be X.X.X format(e.g. 4.5.0), please check released versions in 'https://archive.apache.org/dist/rocketmq/'"
     exit -1
 }
 
@@ -32,6 +32,7 @@ if [ $# -lt 2 ]; then
 fi
 
 ROCKETMQ_VERSION=$1
+
 BASE_IMAGE=$2
 
 checkVersion $ROCKETMQ_VERSION

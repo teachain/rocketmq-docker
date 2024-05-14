@@ -41,6 +41,9 @@ case "${BASE_IMAGE}" in
     centos)
         docker build --no-cache -f Dockerfile-centos-dashboard -t apache/rocketmq-dashboard:${ROCKETMQ_DASHBOARD_VERSION}-centos --build-arg version=${ROCKETMQ_DASHBOARD_VERSION} .
     ;;
+    alpine)
+        docker build --no-cache -f Dockerfile-alpine-dashboard -t apache/rocketmq-dashboard:${ROCKETMQ_DASHBOARD_VERSION}-alpine --build-arg version=${ROCKETMQ_DASHBOARD_VERSION} .
+    ;;
     *)
         echo "${BASE_IMAGE} is not supported, supported base images: centos"
         exit -1
